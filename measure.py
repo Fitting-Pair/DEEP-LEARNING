@@ -473,7 +473,7 @@ def generate_json(file_path):
     from measure import MeasureSMPL
     from measurement_definitions import SMPLXMeasurementDefinitions, STANDARD_LABELS
 
-    smplx_path = "/Users/vecherish/Desktop/deep/DEEP-LEARNING/SMPL-Anthropometry/data/smplx"
+    smplx_path = "/Users/vecherish/Desktop/deep/SMPL-Anthropometry/data/smplx"
     # scan_path = "/Users/vecherish/Desktop/test2/SMPL-Anthropometry/data/obj/sample3.obj"
     measurer = MeasureSMPLX()
     

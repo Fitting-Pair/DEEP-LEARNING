@@ -29,7 +29,7 @@ class UserBodySizeRequestDto(BaseModel):
 @app.post("/create/json")
 async def analyze_obj(user_id: int = Form(...), file: UploadFile = File(...)):
     # contents = await file.read()
-    upload_dir = "/Users/vecherish/Desktop/deep/DEEP-LEARNING/SMPL-Anthropometry/data/obj"
+    upload_dir = "/Users/vecherish/Desktop/deep/SMPL-Anthropometry/data/obj"
     file_path = os.path.join(upload_dir, file.filename)
 
     with open(file_path, "wb") as buffer:
