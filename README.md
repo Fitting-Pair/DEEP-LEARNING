@@ -1,218 +1,76 @@
-# SMPL-Anthropometry
+# DEEP-LEARNING
 
-Measure the SMPL/SMPLX body models and visualize the measurements and landmarks.
+상명대학교 졸업 프로젝트 팀 피팅페어의 딥러닝 서버 레포지토리입니다. 이 프로젝트는 의류 피팅 시뮬레이션을 위한 딥러닝 모델을 개발 및 배포하기 위해 만들어졌습니다.
 
-<p align="center">
-  <img src="https://github.com/DavidBoja/SMPL-Anthropometry/blob/master/assets/measurement_visualization.png" width="950">
-</p>
+## 저작권
 
-<br>
+저작권은 모두 [DavidBoja/SMPL-Anthropometry](https://github.com/DavidBoja/SMPL-Anthropometry) 분에게 있습니다. 저희는 해당 레포지토리를 약간 변형하여 상업적 용도가 아닌 졸업 프로젝트 용도로 사용함을 명시합니다.
 
-## 🔨 Getting started
-You can use a docker container to facilitate running the code. Run in terminal:
+## 개요
 
-```bash
-cd docker
-sh build.sh
-sh docker_run.sh CODE_PATH
-```
+이 프로젝트는 SMPL(Statistical Model of Human Shape) 모델을 기반으로 하여 사용자의 체형을 분석하고, 이를 통해 가상 피팅을 시뮬레이션합니다. 주요 기능은 다음과 같습니다:
 
-by adjusting the `CODE_PATH` to the `SMPL-Anthropometry` directory location. This creates a `smpl-anthropometry-container` container.
+- 사용자 체형 데이터 수집 및 전처리
+- SMPL 모델을 사용한 체형 분석
+- 가상 피팅 결과 시각화
+## 기술 스택
 
-If you do not want to use a docker container, you can also just install the necessary packages from `docker/requirements.txt` into your own enviroment.
+- **FastAPI**: Python을 기반으로 한 고성능 웹 프레임워크
+- **Uvicorn**: ASGI 서버 구현체로 FastAPI 애플리케이션을 실행
+- **Pydantic**: 데이터 유효성 검사 및 설정 관리
+- **Torch**: 딥러닝 프레임워크
+- **Trimesh**: 3D 메시 처리 라이브러리
 
-Next, provide the body models (SMPL or SMPLX) and:
-1. put the `SMPL_{GENDER}.pkl` (MALE, FEMALE and NEUTRAL) models into the `data/smpl` folder
-2. put the `SMPLX_{GENDER}.pkl` (MALE, FEMALE and NEUTRAL) models into the `data/smplx` folder
+## 설치
 
-<br>
+### 필수 요구사항
 
-## 🏃 Running
+- Python 3.7 이상
+- 필요한 Python 패키지들은 `requirements.txt`에 명시되어 있습니다.
 
-First import the necessary libraries:
+### 설치 방법
 
-```python
-from measure import MeasureBody
-from measurement_definitions import STANDARD_LABELS
-```
-<br>
+1. 이 레포지토리를 클론합니다.
 
-Next define the measurer by setting the body model you want to measure with `model_type` (`smpl` or `smplx`):
-```python
-measurer = MeasureBody(model_type)
-```
-<br>
+    ```bash
+    git clone https://github.com/your-repository/deep-learning.git
+    cd deep-learning
+    ```
 
-Then, there are two ways of using the code for measuring a body model depending on how you want to define the body:
+2. anaconda 가상 환경을 설정하고 활성화합니다.
 
-1. Define the body model using the shape `betas` and gender `gender` parameters:
+    ```bash
+   conda activate smpl
+    ```
+3. 필요한 패키지들을 설치합니다.
 
-```python
-measurer.from_body_model(gender=gender, shape=betas) 
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-2. Define the body model using the N x 3 vertices `verts` (N=6890 if SMPL, and 10475 if SMPLX):
+## 사용 방법
 
-```python
-measurer.from_verts(verts=verts) 
-```
-&nbsp;&nbsp;&nbsp;&nbsp; 📣 Defining the body using the vertices can be especially useful when the SMPL/SMPLX vertices have been <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; further refined to fit a 2D/3D model and do not satsify perfectly a set of shape parameters anymore.<br>
-<br>
+1. 서버 실행
 
-Finally, you can measure the body with:
-```python
+    ```bash
+    uvicorn main:app --reload
+    ```
 
-measurement_names = measurer.all_possible_measurements # or chose subset of measurements 
-measurer.measure(measurement_names) 
-measurer.label_measurements(STANDARD_LABELS) 
-```
+2. API 엔드포인트를 통해 데이터를 주고받습니다. 주요 엔드포인트는 다음과 같습니다:
 
-Then, the measurements dictionary can be obtained with `measurer.measurements` and the labeled measurements can be obtained with `measurer.labeled_measurements`. The list of the predefined measurements along with its standard literature labels are:
+    - `/create/json`: obj 파일을 업로드하고 JSON 데이터를 생성합니다.
+    - `/get/json`: 생성된 JSON 데이터를 받아서 처리합니다.
 
-```
-STANDARD_MEASUREMENT = {
-    'A': 'head circumference',
-    'B': 'neck circumference',
-    'C': 'shoulder to crotch height',
-    'D': 'chest circumference',
-    'E': 'waist circumference',
-    'F': 'hip circumference',
-    'G': 'wrist right circumference',
-    'H': 'bicep right circumference',
-    'I': 'forearm right circumference',
-    'J': 'arm right length',
-    'K': 'inside leg height',
-    'L': 'thigh left circumference',
-    'M': 'calf left circumference',
-    'N': 'ankle left circumference',
-    'O': 'shoulder breadth',
-    'P': 'height'
-    }
-```
+## 프로젝트 구조
 
-All the measurements are expressed in cm.
+- `main.py`: FastAPI 서버의 메인 파일입니다.
+- `measure.py`: SMPL 모델을 사용하여 체형 데이터를 분석하는 코드가 포함되어 있습니다.
 
-<br>
+## 라이선스
 
-You can also compute the mean absolute error (MAE) between two sets of measurements as:
-```python
-from evaluate import evaluate_mae
-MAE = evaluate_mae(measurer1.measurements,measurer2.measurements)
-```
+이 프로젝트는 [MIT 라이선스](LICENSE)를 따릅니다.
 
-where `measurer1` and `measurer2` are two intances of the `MeasureBody` class.
+## 문의
 
-<br>
-
-## 💿 Demos
-
-You can run the `measure.py` script to measure all the predefined measurements (mentioned above) and visualize the results for a zero-shaped T-posed neutral gender SMPL body model:
-
-```bash
-python measure.py --measure_neutral_smpl_with_mean_shape
-```
-
-The output consists of a dictionary of measurements expressed in cm, the labeled measurements using standard labels,and the viualization of the measurements in the browser, as in the Figure above.
-
-Similarly, you can measure a zero-shaped T-posed neutral gender SMPLX body model with:
-```bash
-python measure.py --measure_neutral_smplx_with_mean_shape
-```
-
-<br>
-
-You can run the `evaluate.py` script to compare two sets of measurements of randomly shaped SMPL bodies as:
-
-```python
-python evaluate.py
-```
-The output consists of the mean absolute error (MAE) between two sets of measurements.
-
-<br>
-<br>
-
-## 📝 Notes
-
-### Measurement definitions
-There are two types of measurements: lenghts and circumferences.
-1. Lengths are defined as distances between landmark points defined on the body model
-2. Circumferences are defiend as plane cuts of the body model
-
-To define a new measurement:
-1. Open `measurement_definitions.py`
-1. add the new measurement to the `MEASUREMENT_TYPES` dict and set its type:
-   `LENGTH` or `CIRCUMFERENCE`
-2. depending on the measurement type, define the measurement in the `LENGTHS` or 
-   `CIRCUMFERENCES` dict of the appropriate body model (`SMPLMeasurementDefinitions` or `SMPLXMeasurementDefinitions`)
-   - `LENGTHS` are defined using 2 landmarks - the measurement is 
-            found as the distance between the landmarks
-   - `CIRCUMFERENCES` are defined with landmarks and joints - the 
-            measurement is found by cutting the body model with the 
-            plane defined by a point (landmark point) and normal (
-            vector connecting the two joints)
-3. If the measurement is a `CIRCUMFERENCE`, a possible issue that arises is
-   that the plane cutting results in multiple body part slices. To alleviate
-   that, define the body part where the measurement should be located in 
-   `CIRCUMFERENCE_TO_BODYPARTS` dict. This way, only the slice in the corresponding body part is
-   used for finding the measurement. The body parts are defined by the 
-   face segmentation located in `data/smpl_body_parts_2_faces.json` or `data/smplx_body_parts_2_faces.json`.
-
-<br>
-
-### Measurement normalization
-If a body model has unknown scale (ex. the body was regressed from an image), the measurements can be height-normalized as so:
-
-```python
-measurer = MeasureBody(model_type) # assume given model type
-measurer.from_body_model(shape=betas, gender=gender) # assume given betas and gender
-
-all_measurement_names = measurer.possible_measurements
-measurer.measure(all_measurement_names)
-new_height = 175
-measurer.height_normalize_measurements(new_height)
-```
-
-This creates a dict of measurements `measurer.height_normalized_measurements` where each measurement was normalized with:
-```
-new_measurement = (old_measurement / old_height) * new_height
-```
-<br>
-
-### Additional visualizations
-To visualize the SMPL and SMPLX face segmentation on two separate plots, run:
-```bash
-python visualize.py --visualize_smpl_and_smplx_face_segmentation
-```
-
-To visualize the SMPL and SMPLX joints on the same plot, run:
-```bash
-python visualize.py --visualize_smpl_and_smplx_joints
-```
-
-To visualize the SMPL and SMPLX point segmentations on two side-by-side plots, run:
-```bash
-python visualize.py --visualize_smpl_and_smplx_point_segmentation
-```
-NOTE: You need to provide the `point_segmentation_meshcapade.json` files in the folders `data/smpl` and `data/smplx` from [here](https://meshcapade.wiki/SMPL#body-part-segmentation).
-
-To visualize the SMPL and SMPLX landmarks on two side-by-side plots, run:
-```bash
-python visualize.py --visualize_smpl_and_smplx_landmarks
-```
-
-
-<br>
-<br>
-
-## TODO
-
-- [X] Implement SMPL-X body model
-- [ ] Implement STAR body model
-- [ ] Implement SUPR body model
-- [X] Add height normalization for the measurements
-- [ ] Allow posed and shaped body models as inputs, and measure them after unposing
-
-<br>
-
-⭐ <b>Leave a star if you find this repository useful</b> ⭐
+문제가 된다면 해당 이메일로 문의 주시면 감사하겠습니다.
+[202010852@sangmyung.kr](202010852@sangmyung.kr)

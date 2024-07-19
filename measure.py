@@ -7,12 +7,13 @@ import smplx
 from pprint import pprint
 import os
 import argparse
-
+import json
 from measurement_definitions import *
 from utils import *
 from visualize import Visualizer
 from landmark_definitions import *
 from joint_definitions import *
+
 
 
 
@@ -379,6 +380,7 @@ class MeasureSMPL(Measurer):
         self.joints = model_output.joints.squeeze().detach().cpu().numpy()
         self.gender = gender
 
+#FAST API 
 
 class MeasureSMPLX(Measurer):
     '''
@@ -467,36 +469,125 @@ class MeasureBody():
             raise NotImplementedError("Model type not defined")
 
 
+def generate_json(file_path):
+    from measure import MeasureSMPL
+    from measurement_definitions import SMPLXMeasurementDefinitions, STANDARD_LABELS
 
-if __name__ == "__main__":
+    smplx_path = "/Users/vecherish/Desktop/deep/DEEP-LEARNING/SMPL-Anthropometry/data/smplx"
+    # scan_path = "/Users/vecherish/Desktop/test2/SMPL-Anthropometry/data/obj/sample3.obj"
+    measurer = MeasureSMPLX()
+    
+    verts = trimesh.load(file_path,process=False).vertices
+    verts_tensor = torch.from_numpy(verts)
+    verts = verts_tensor.float()
 
-    parser = argparse.ArgumentParser(description='Measure body models.')
-    parser.add_argument('--measure_neutral_smpl_with_mean_shape', action='store_true',
-                        help="Measure a mean shape smpl model.")
-    parser.add_argument('--measure_neutral_smplx_with_mean_shape', action='store_true',
-                        help="Measure a mean shape smplx model.")
-    args = parser.parse_args()
+    measurer.from_verts(verts)
 
-    model_types_to_measure = []
-    if args.measure_neutral_smpl_with_mean_shape:
-        model_types_to_measure.append("smpl")
-    elif args.measure_neutral_smplx_with_mean_shape:
-        model_types_to_measure.append("smplx")
+    measurement_names = SMPLXMeasurementDefinitions.possible_measurements
+    measurer.measure(measurement_names)
+    print("Measurements")
+    pprint(measurer.measurements)
 
-    for model_type in model_types_to_measure:
-        print(f"Measuring {model_type} body model")
-        measurer = MeasureBody(model_type)
+    measurer.label_measurements(STANDARD_LABELS)
+    print("Labled measurements")
+    pprint(measurer.label_measurements)
 
-        betas = torch.zeros((1, 10), dtype=torch.float32)
-        measurer.from_body_model(gender="NEUTRAL", shape=betas)
+    # measurer.visualize()
 
-        measurement_names = measurer.all_possible_measurements
-        measurer.measure(measurement_names)
-        print("Measurements")
-        pprint(measurer.measurements)
+    filtered_data = {
+    'chestSize': measurer.measurements['chest circumference'],
+    'hipSize': measurer.measurements['hip circumference'],
+    'shoulderSize': measurer.measurements['shoulder breadth'],
+    'waistSize': measurer.measurements['waist circumference']
+    }
 
-        measurer.label_measurements(STANDARD_LABELS)
-        print("Labeled measurements")
-        pprint(measurer.labeled_measurements)
+    return json.dumps(filtered_data)
 
-        measurer.visualize()
+
+
+
+    
+
+# if __name__ == "__main__":
+
+#     parser = argparse.ArgumentParser(description='Measure body models.')
+#     parser.add_argument('--measure_neutral_smpl_with_mean_shape', action='store_true',
+#                         help="Measure a mean shape smpl model.")
+#     parser.add_argument('--measure_neutral_smplx_with_mean_shape', action='store_true',
+#                         help="Measure a mean shape smplx model.")
+#     args = parser.parse_args()
+
+#     model_types_to_measure = []
+#     if args.measure_neutral_smpl_with_mean_shape:
+#         model_types_to_measure.append("smpl")
+#     elif args.measure_neutral_smplx_with_mean_shape:
+#         model_types_to_measure.append("smplx")
+
+#     for model_type in model_types_to_measure:
+#         print(f"Measuring {model_type} body model")
+#         measurer = MeasureBody(model_type)
+
+#         betas = torch.zeros((1, 10), dtype=torch.float32)
+#         measurer.from_body_model(gender="NEUTRAL", shape=betas)
+
+#         measurement_names = measurer.all_possible_measurements
+#         measurer.measure(measurement_names)
+#         print("Measurements")
+#         pprint(measurer.measurements)
+
+#         measurer.label_measurements(STANDARD_LABELS)
+#         print("Labeled measurements")
+#         pprint(measurer.labeled_measurements)
+
+#         measurer.visualize()
+
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser(description='Measure and visualize body models.')
+#     parser.add_argument('--gender', type=str, choices=['MALE', 'FEMALE', 'NEUTRAL'], default='NEUTRAL',
+#                         help="Gender of the body model (default: NEUTRAL)")
+#     parser.add_argument('--model_type', type=str, choices=['smplx'], default='smplx',
+#                         help="Type of the body model (default: smplx)")
+#     parser.add_argument('--measure_all', action='store_true',
+#                         help="Measure all possible measurements")
+#     parser.add_argument('--visualize', action='store_true',
+#                         help="Visualize the measurements")
+#     args = parser.parse_args()
+
+#     # Determine which model types to measure
+#     model_types_to_measure = []
+#     if args.model_type:
+#         model_types_to_measure.append(args.model_type.lower())
+
+#     for model_type in model_types_to_measure:
+#         print(f"Measuring {model_type} body model")
+#         measurer = MeasureBody(model_type)
+
+#         # Create a mean shape model for neutral gender
+#         betas = torch.zeros((1, 10), dtype=torch.float32)
+#         measurer.from_body_model(gender=args.gender, shape=betas)
+
+#         measurement_names = measurer.all_possible_measurements if args.measure_all else []
+#         measurer.measure(measurement_names)
+#         print("Measurements:")
+#         pprint(measurer.measurements)
+
+#         # Label measurements
+#         measurer.label_measurements(STANDARD_LABELS)
+#         print("Labeled measurements:")
+#         pprint(measurer.labeled_measurements)
+
+#         # Visualize measurements
+#         if args.visualize:
+#             print("Visualizing measurements")
+#             measurer.visualize()
+# # #model type 
+# # model_type = 'smplx'
+# # measurer = MeasureBody(model_type)
+# # betas = torch.zeros((1, 10), dtype=torch.float32)
+# # measurer.from_body_model(gender="MALE", shape=betas) 
+
+# # # measurer.from_verts(verts=10475) 
+
+# # measurement_names = measurer.all_possible_measurements # or chose subset of measurements 
+# # measurer.measure(measurement_names) 
+# # measurer.label_measurements(STANDARD_LABELS) 
